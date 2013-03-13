@@ -131,7 +131,7 @@ namespace TestNLPIR
 
             int import_count = NLPIR_ImportUserDict("userdict1.txt");
             Console.WriteLine("{0} uder dict item imported", import_count);
-            String s = "冯路遥，在9:30AM,前往同  济大学，堡胜吃盖浇饭花费10.3元。";
+            String s = "9:30AM,前往同  济大学，堡胜吃盖浇饭花费10.3元。";
             s = s.Replace(" ",string.Empty);
             System.IO.StreamWriter file = new System.IO.StreamWriter("test.txt");
             file.WriteLine(s);
@@ -190,7 +190,7 @@ namespace TestNLPIR
                 file.WriteLine(item);
             }
 
-            PatternAction pa = new PatternAction("(/n) /p (/x) /v (/daxue) (/ct) /v (/n) 花费 (/m) (/q) {type:支出 user:/1 datetime:/2 position:/3+/4 cost:/6+/7}");
+            PatternAction pa = new PatternAction("(/n?) /p? (/x) /v (/daxue) (/ct) /v (/n) 花费 (/m) (/q) {type:支出 user:/1 datetime:/2 position:/3+/4 cost:/6+/7}");
 
             System.Console.WriteLine("Begin Match");
 

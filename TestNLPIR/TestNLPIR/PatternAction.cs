@@ -29,7 +29,7 @@ namespace TestNLPIR
         
         public PatternAction(String pattern_action)
         {
-            if (parse_action(ref pattern_action))
+            if (!parse_action(ref pattern_action))
             {
                 System.Console.WriteLine("parse action {0} failed", pattern_action);
             }
@@ -64,6 +64,7 @@ namespace TestNLPIR
                 Match match = Regex.Match(pattern, @"\((.*)\)");
                 pattern = match.Groups[1].Value;
                 need_save = true;
+                matched_segs.Add("");
             }
 
             // skip punctuation
@@ -81,12 +82,11 @@ namespace TestNLPIR
                 if(segment.type.StartsWith(pattern_type))
                 {
                     if(need_save)
-                        matched_segs.Add(segment.value);
+                        matched_segs[matched_segs.Count-1] = segment.value;
                     segment_pos++;
                     pattern_pos++;
                     return true;
                 }
-                return false;
             }
 
             // match segment by string equal
@@ -99,7 +99,7 @@ namespace TestNLPIR
 
             if (pattern.EndsWith("?"))
             {
-                segment_pos++;
+                pattern_pos++;
                 return true;
             }
             return false;
