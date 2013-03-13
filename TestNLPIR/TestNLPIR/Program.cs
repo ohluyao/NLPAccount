@@ -190,12 +190,15 @@ namespace TestNLPIR
                 file.WriteLine(item);
             }
 
-            PatternAction pa = new PatternAction("/n /p /x /v /daxue /ct /v /n /v /m /q");
+            PatternAction pa = new PatternAction("(/n) /p (/x) /v (/daxue) (/ct) /v (/n) 花费 (/m) (/q) {type:支出 user:/1 datetime:/2 position:/3+/4 cost:/6+/7}");
 
             System.Console.WriteLine("Begin Match");
-            if (pa.match(segment_list.ToArray()) != null)
+
+            Account account = pa.match(segment_list.ToArray());
+            if (account != null)
             {
                 System.Console.WriteLine("Pattern matched!");
+                file.WriteLine(account);
             }
             else {
                 System.Console.WriteLine("Patter not matched!");
@@ -203,47 +206,47 @@ namespace TestNLPIR
 
             pa.print(file);
 
-            System.Console.WriteLine("Before Userdict imported:");
-            String ss;
-            Console.WriteLine("insert user dic:");
-            ss = Console.ReadLine();
-            while (ss[0] != 'q' && ss[0] != 'Q')
-            {
-                //用户词典中添加词
-                int iiii = NLPIR_AddUserWord(ss);//词 词性 example:点击下载 vyou
-                intPtr = NLPIR_ParagraphProcess(s, 1);
-                str = Marshal.PtrToStringAnsi(intPtr);
-                System.Console.WriteLine(str);
-                file.WriteLine(str);
-                NLPIR_SaveTheUsrDic(); // save the user dictionary to the file
+            //System.Console.WriteLine("Before Userdict imported:");
+            //String ss;
+            //Console.WriteLine("insert user dic:");
+            //ss = Console.ReadLine();
+            //while (ss[0] != 'q' && ss[0] != 'Q')
+            //{
+            //    //用户词典中添加词
+            //    int iiii = NLPIR_AddUserWord(ss);//词 词性 example:点击下载 vyou
+            //    intPtr = NLPIR_ParagraphProcess(s, 1);
+            //    str = Marshal.PtrToStringAnsi(intPtr);
+            //    System.Console.WriteLine(str);
+            //    file.WriteLine(str);
+            //    NLPIR_SaveTheUsrDic(); // save the user dictionary to the file
 
-                //删除用户词典中的词
-                Console.WriteLine("delete usr dic:");
-                ss = Console.ReadLine();
-                iiii = NLPIR_DelUsrWord(ss);
-                str = Marshal.PtrToStringAnsi(intPtr);
-                System.Console.WriteLine(str);
-                NLPIR_SaveTheUsrDic();
+            //    //删除用户词典中的词
+            //    Console.WriteLine("delete usr dic:");
+            //    ss = Console.ReadLine();
+            //    iiii = NLPIR_DelUsrWord(ss);
+            //    str = Marshal.PtrToStringAnsi(intPtr);
+            //    System.Console.WriteLine(str);
+            //    NLPIR_SaveTheUsrDic();
 
-            }
+            //}
 
 
             //测试新词发现与自适应分词功能
-            NLPIR_NWI_Start();//新词发现功能启动
-            NLPIR_NWI_AddFile("test/test.txt");//添加一个待发现新词的文件，可反复添加
+            //NLPIR_NWI_Start();//新词发现功能启动
+            //NLPIR_NWI_AddFile("test/test.txt");//添加一个待发现新词的文件，可反复添加
 
-            NLPIR_NWI_Complete();//新词发现完成
-
-
-            intPtr = NLPIR_NWI_GetResult();
-            str = Marshal.PtrToStringAnsi(intPtr);
+            //NLPIR_NWI_Complete();//新词发现完成
 
 
-            file.WriteLine("新词识别结果:");
-            file.WriteLine(str);
-            NLPIR_FileProcess("test/test.txt","test/test.txt");
-            NLPIR_NWI_Result2UserDict();//新词识别结果导入分词库
-            NLPIR_FileProcess("test/test.txt", "test/test.txt");
+            //intPtr = NLPIR_NWI_GetResult();
+            //str = Marshal.PtrToStringAnsi(intPtr);
+
+
+            //file.WriteLine("新词识别结果:");
+            //file.WriteLine(str);
+            //NLPIR_FileProcess("test/test.txt","test/test.txt");
+            //NLPIR_NWI_Result2UserDict();//新词识别结果导入分词库
+            //NLPIR_FileProcess("test/test.txt", "test/test.txt");
             NLPIR_Exit();
             file.Close();
         }

@@ -22,35 +22,79 @@ namespace TestNLPIR
 
     class PatternAction
     {
-        Dictionary<String, String> Actions;
+        Dictionary<String, String> Actions = new Dictionary<string,string>();
         String[] Pattern;
         List<String> matched_segs = new List<string>();
 
-        public PatternAction(String pattern)
+        
+        public PatternAction(String pattern_action)
         {
-            Pattern = pattern.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parse_action(ref pattern_action))
+            {
+                System.Console.WriteLine("parse action {0} failed", pattern_action);
+            }
+            Pattern = pattern_action.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private bool parse_action(ref String pattern_action)
+        {
+            if (Regex.IsMatch(pattern_action, "\\{.*\\}"))
+            {
+                String str_action = Regex.Match(pattern_action, "\\{(.*)\\}").Groups[1].Value;
+                String[] action_list = str_action.Split(new char[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < action_list.Length; i++)
+                {
+                    String[] key_value_action = action_list[i].Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                    if(key_value_action.Length == 2)
+                        Actions.Add(key_value_action[0],key_value_action[1]);
+                }
+                pattern_action = pattern_action.Split(new char[] { '{' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                return true;
+            }
+            return false;
         }
 
         private bool match_pattern(String pattern, SentenceSegment segment, ref int segment_pos, ref int pattern_pos)
         {
-            if (segment.type.StartsWith("w")) // skip punctuation
+            bool need_save = false;
+
+            // parse parenthesis
+            if (Regex.IsMatch(pattern, @"\(.*\)"))  
+            {
+                Match match = Regex.Match(pattern, @"\((.*)\)");
+                pattern = match.Groups[1].Value;
+                need_save = true;
+            }
+
+            // skip punctuation
+            if (segment.type.StartsWith("w")) 
             {
                 segment_pos ++;
                 return true;
             }
 
-            if (pattern.StartsWith("/"))  // match segment by type --> /x,/n etc.
+            // match segment by type --> /x,/n etc.
+            if (pattern.StartsWith("/"))  
             {
-                MatchCollection matches = Regex.Matches(pattern, "/(\\w+)");
-                String pattern_type = matches[0].Groups[1].Value;
+                Match match = Regex.Match(pattern, "/(\\w+)");
+                String pattern_type = match.Groups[1].Value;
                 if(segment.type.StartsWith(pattern_type))
                 {
-                    matched_segs.Add(segment.value);
+                    if(need_save)
+                        matched_segs.Add(segment.value);
                     segment_pos++;
                     pattern_pos++;
                     return true;
                 }
                 return false;
+            }
+
+            // match segment by string equal
+            if (pattern == segment.value)
+            {
+                segment_pos++;
+                pattern_pos++;
+                return true;
             }
 
             if (pattern.EndsWith("?"))
@@ -61,17 +105,55 @@ namespace TestNLPIR
             return false;
         }
 
-        public Account match(SentenceSegment[] segment_list) 
+        private String get_value(String[] action_value)
+        {
+            String result = "";
+            for (int i = 0; i < action_value.Length; i++)
+            {
+                if (action_value[i].StartsWith("/"))
+                {
+                    String str_index = action_value[i].Remove(0, 1);
+                    int index = int.Parse(str_index);
+                    result += matched_segs[index - 1];
+                }
+                else {
+                    result += action_value[i];
+                }
+            }
+            return result;
+        }
+        private Account get_account()
+        {
+            Account account = new Account();
+            foreach (KeyValuePair<String, String> action in Actions)
+            {
+                String[] action_value = action.Value.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
+                String value = get_value(action_value);
+                switch (action.Key)
+                {
+                    case "user": account.user = value; break;
+                    case "datetime": account.datetime = value; break;
+                    case "cost": account.cost = value; break;
+                    case "position": account.position = value; break;
+                    case "type": account.type = value; break;
+                    default: break;
+                }
+            }
+            return account;
+        }
+
+
+        public Account match(SentenceSegment[] segment_list)
         {
             int seg_pos = 0;
             int pattern_pos = 0;
             int end = Pattern.Length;
             while (pattern_pos < end)
             {
-                if(!match_pattern(Pattern[pattern_pos], segment_list[seg_pos], ref seg_pos, ref pattern_pos))
-                    return null;            
+                if (!match_pattern(Pattern[pattern_pos], segment_list[seg_pos], ref seg_pos, ref pattern_pos))
+                    return null;
             }
-            return new Account();
+            return get_account();
         }
 
         public void print(StreamWriter file)
