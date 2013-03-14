@@ -131,7 +131,7 @@ namespace TestNLPIR
 
             int import_count = NLPIR_ImportUserDict("userdict1.txt");
             Console.WriteLine("{0} uder dict item imported", import_count);
-            String s = "9:30AM,前往同  济大学，堡胜吃盖浇饭花费10.3元。";
+            String s = "9:30,前往同  济大学，堡胜吃盖浇饭花费10.3元。";
             s = s.Replace(" ",string.Empty);
             System.IO.StreamWriter file = new System.IO.StreamWriter("test.txt");
             file.WriteLine(s);
@@ -181,7 +181,8 @@ namespace TestNLPIR
                 }
                 else
                 {
-                    segment_list.Add(new SentenceSegment(){value = segment[0], type = segment[1]});
+                    if(!need_remove(segment))
+                        segment_list.Add(new SentenceSegment(){value = segment[0], type = segment[1]});
                 }
             }
 
@@ -198,6 +199,7 @@ namespace TestNLPIR
             if (account != null)
             {
                 System.Console.WriteLine("Pattern matched!");
+                file.WriteLine("解析得到的记录：");
                 file.WriteLine(account);
             }
             else {
@@ -249,6 +251,22 @@ namespace TestNLPIR
             //NLPIR_FileProcess("test/test.txt", "test/test.txt");
             NLPIR_Exit();
             file.Close();
+        }
+
+        private static bool need_remove(string[] segment)
+        {
+            if (segment.Length < 2)
+                return false;
+            String type = segment[1];
+
+            //助词 u, 叹词 e, 语气词 y, 拟声词 o, 
+            String[] remove_segs = new String[] { "u", "e","y","o,","w"};
+            for (int i = 0; i < remove_segs.Length; i++)
+            {
+                if (type.StartsWith(remove_segs[i]))
+                    return true;
+            }
+            return false;
         }
     }
 }
