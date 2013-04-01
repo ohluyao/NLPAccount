@@ -54,6 +54,20 @@ namespace TestNLPIR
             return false;
         }
 
+        private bool is_equal(String pattern, SentenceSegment segment)
+        {
+            if (pattern.StartsWith("/"))
+            {
+                Match match = Regex.Match(pattern, "/(\\w+)");
+                String pattern_type = match.Groups[1].Value;
+                return segment.type.StartsWith(pattern_type);
+
+            }
+            else {
+                return pattern == segment.value;
+            }
+        }
+
         private bool match_pattern(String pattern, SentenceSegment segment, ref int segment_pos, ref int pattern_pos)
         {
             bool need_save = false;
@@ -64,38 +78,45 @@ namespace TestNLPIR
                 Match match = Regex.Match(pattern, @"\((.*)\)");
                 pattern = match.Groups[1].Value;
                 need_save = true;
-                matched_segs.Add("");
+                matched_segs.Add(String.Empty);
             }
 
-            // skip punctuation
-            if (segment.type.StartsWith("w")) 
+            // match through is_equal
+            String[] pattern_list = pattern.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (String single_pattern in pattern_list)
             {
-                segment_pos ++;
-                return true;
-            }
-
-            // match segment by type --> /x,/n etc.
-            if (pattern.StartsWith("/"))  
-            {
-                Match match = Regex.Match(pattern, "/(\\w+)");
-                String pattern_type = match.Groups[1].Value;
-                if(segment.type.StartsWith(pattern_type))
+                if (is_equal(single_pattern, segment))
                 {
-                    if(need_save)
-                        matched_segs[matched_segs.Count-1] = segment.value;
+                    if (need_save)
+                        matched_segs[matched_segs.Count - 1] = segment.value;
                     segment_pos++;
                     pattern_pos++;
                     return true;
                 }
             }
 
-            // match segment by string equal
-            if (pattern == segment.value)
-            {
-                segment_pos++;
-                pattern_pos++;
-                return true;
-            }
+            //// match segment by type --> /x,/n etc.
+            //if (pattern.StartsWith("/"))  
+            //{
+            //    Match match = Regex.Match(pattern, "/(\\w+)");
+            //    String pattern_type = match.Groups[1].Value;
+            //    if(segment.type.StartsWith(pattern_type))
+            //    {
+            //        if(need_save)
+            //            matched_segs[matched_segs.Count-1] = segment.value;
+            //        segment_pos++;
+            //        pattern_pos++;
+            //        return true;
+            //    }
+            //}
+
+            //// match segment by string equal
+            //if (pattern == segment.value)
+            //{
+            //    segment_pos++;
+            //    pattern_pos++;
+            //    return true;
+            //}
 
             if (pattern.EndsWith("?"))
             {
@@ -110,15 +131,20 @@ namespace TestNLPIR
             String result = "";
             for (int i = 0; i < action_value.Length; i++)
             {
+              
                 if (action_value[i].StartsWith("/"))
                 {
                     String str_index = action_value[i].Remove(0, 1);
                     int index = int.Parse(str_index);
+                    if (matched_segs[index - 1] == String.Empty)
+                        continue;
                     result += matched_segs[index - 1];
                 }
-                else {
+                else
+                {
                     result += action_value[i];
-                }
+                }    
+              
             }
             return result;
         }
@@ -127,15 +153,23 @@ namespace TestNLPIR
             Account account = new Account();
             foreach (KeyValuePair<String, String> action in Actions)
             {
-                String[] action_value = action.Value.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
-                String value = get_value(action_value);
+                String[] values = action.Value.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                String parsed_value = String.Empty;
+                foreach (String value in values)
+                {
+                    String[] action_value = action.Value.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    parsed_value = get_value(action_value);
+                    if (parsed_value != String.Empty)
+                        break;
+                }
                 switch (action.Key)
                 {
-                    case "user": account.user = value; break;
-                    case "datetime": account.datetime = value; break;
-                    case "cost": account.cost = value; break;
-                    case "position": account.position = value; break;
-                    case "type": account.type = value; break;
+                    case "user": account.user = parsed_value; break;
+                    case "datetime": account.datetime = parsed_value; break;
+                    case "cost": account.cost = parsed_value; break;
+                    case "position": account.position = parsed_value; break;
+                    case "type": account.type = parsed_value; break;
                     default: break;
                 }
             }
