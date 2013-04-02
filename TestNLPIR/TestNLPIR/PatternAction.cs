@@ -157,7 +157,7 @@ namespace TestNLPIR
                 String parsed_value = String.Empty;
                 foreach (String value in values)
                 {
-                    String[] action_value = action.Value.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
+                    String[] action_value = value.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
 
                     parsed_value = get_value(action_value);
                     if (parsed_value != String.Empty)

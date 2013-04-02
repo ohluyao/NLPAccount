@@ -1,4 +1,4 @@
-##Test Mark Down##
+##NLP Account##
 
 ###1. Configure NLPIR###
 - Copy the Data directory and NLPIR.dll to exe.
@@ -9,9 +9,11 @@ Pattern is used to match a sentence to account. There are two types of match met
 
 **Example:** 		
     
-	"(/n?) /p? (/x) /v (/daxue) (/ct) /v (/n) 花费 (/m) (/q)"
+	"(/n?) /p? (/x|/m) /v (/daxue) (/ct) /v (/n) 花费 (/m) (/q)"
 
  Pattern segment is split by **space**, 
+
+- Each pattern segment can consist of multiple segments which separated by `|`.If one of the segment can be matched, the whole pattern segment are matched.
 
 - Match by Segment Type   
 Segment match by type is starts with *"/"*, **eg:** `/n`.  
@@ -40,7 +42,14 @@ Action is surrounded by blanket `{}` and each action is split by **space**. For 
 **eg:** `type, user, datetime, position, cost`.
 
 - Account property's Value **eg:** `position:/3+/4`
- 1. Value can be **number** or **normal string**.  
- 2. The **number** indicate the index of the matched segment by pattern and is prefixed a `/`. 
- 3. A **normal string** indicate the value that can be used directly.
- 4. A value can be consist of multiple matched segment or value user provided, and these segment are concatenate with `+`. **eg:** `/3+/4`
+ 1. This can be a list of values separated by `|` **eg:** `user:/1|我`       
+     - The values are matched according to its order in the value list.
+     
+     - The match will stop once the matched segment indicated by the **number** is not empty or the value is **normal string**   
+  
+ 
+ 2. Value can be **number** or **normal string**.  
+     - A **number** indicate the index of the matched segment by pattern and is prefixed a `/`. 
+  
+     - A **normal string** indicate the value that can be used directly.
+ 3. A value can be consist of multiple matched segment or value user provided, and these segment are concatenate with `+`. **eg:** `/3+/4`
